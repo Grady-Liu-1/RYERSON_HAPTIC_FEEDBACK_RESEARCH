@@ -7,15 +7,6 @@ function LIDAR_R1()
 MasterIp='192.168.1.26'
 rosinit(MasterIp);
 tbot=turtlebot('192.168.1.26');
-[scan,scanMsg]=getLaserScan(tbot);
-
-%Must use scanMsg for pull/retrieving data, scan only provides the
-%properties of the matrix 
-%Cart holds x,y coordinates of the Lidar Data. 
-cart=readCartesian(scanMsg);
-x=cart(:,1);
-y=cart(:,2);
-r=(x.^2+y.^2).^0.5;
 
 %Create the Imaginary Boundary for data pts 
 %Let Rmax=1 meter as the calibrated radius 
@@ -36,6 +27,19 @@ frontLPin = 'd10';
 backPin = 'd11';
 
 a = arduino('com4','uno'); %%, port, and board
+
+while(endflag==1%place holder variable x for button shutoff flag)
+%Getting Lidar Scan
+[scan,scanMsg]=getLaserScan(tbot);
+
+%Must use scanMsg for pull/retrieving data, scan only provides the
+%properties of the matrix 
+%Cart holds x,y coordinates of the Lidar Data. 
+cart=readCartesian(scanMsg);
+x=cart(:,1);
+y=cart(:,2);
+r=(x.^2+y.^2).^0.5;
+
 
 %Determine the normalized intensity by replicating the mapping function in
 %arduino
@@ -95,5 +99,16 @@ writePWMDutyCycle(a, frontPin, 1 - front);
 writePWMDutyCycle(a, frontLPin, 1 - frontL);
 writePWMDutyCycle(a, backPin, 1- (back*-1));
 
+if(btn==1 %button shutoff has been pressed)
+    % Ending ROS Server
+    rosshutdown
+    endflag==1
+else
+    endflag==0;
+end
 
+
+%End of Loop
+end 
+%End of Function
 end
